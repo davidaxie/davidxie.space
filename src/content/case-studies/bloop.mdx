@@ -1,0 +1,95 @@
+It was 11pm on a Friday and someone at the table said, "what if the app itself is the privacy violation?" We'd been hacking for four hours. We had a whiteboard full of features — decibel alerts, safe listening timers, concert mode — and none of it felt different from the five apps already in the App Store. That sentence cleared the board.
+
+Hearing damage is permanent. The science is settled: sustained exposure above 85dB causes cumulative, irreversible loss. But the apps built to prevent it had a problem nobody talked about: they kept a microphone open, streaming ambient audio to a server, training models on what your environment sounds like. The people most likely to need hearing protection — concertgoers, gym regulars, construction workers — were also the people least likely to trust an app with a live feed of everywhere they go. We'd been building the wrong thing.
+
+bloop. started over with one constraint: **your audio never leaves your device.**
+
+## Context
+
+<Callout label="At a glance">
+  bloop. is an iOS app built at HoyaHacks 2026 in 72 hours. It monitors
+  ambient decibel levels entirely on-device using Apple's HealthKit and Core
+  Audio, surfaces personalized hearing risk insights via Gemini, and won 3rd
+  place overall and Best .Tech Domain at the hackathon.
+</Callout>
+
+HoyaHacks is Georgetown's annual hackathon — 72 hours of hacking, hundreds of students, dozens of sponsors. We went in with a team of three and no pre-built boilerplate, just a shared conviction that the hackathon apps that win are the ones that solve a problem the judges have personally felt. Hearing loss at concerts? Every judge over 30 has stood next to a speaker they regretted.
+
+## The problem, framed
+
+The existing hearing protection landscape splits into two failure modes:
+
+**Too passive:** Apps that just show a decibel number. They're accurate, they're useless. Knowing you're at 94dB doesn't tell you anything actionable — how long can you safely stay? What's your cumulative exposure today? Should you step outside for 10 minutes or leave entirely?
+
+**Too invasive:** Apps that actually give you personalized risk modeling require a persistent microphone. Which means streaming audio. Which means somewhere, a server knows you were at a specific venue, at a specific time, in a specific noise environment. That data profile is worth something to someone. Users feel this even if they can't articulate it — it's why hearing protection apps have 3-star reviews full of "deleted because it felt creepy."
+
+<PullQuote attribution="User interview, hackathon night">
+"I'd use something like this, but there's no way I'm letting an app listen to me all night."
+</PullQuote>
+
+The gap was clear: nobody had built hearing protection that was both **smart enough to be useful** and **private enough to be trusted**.
+
+## The insight
+
+HealthKit already collects noise exposure data on every iPhone running iOS 14+. AirPods feed it. The Apple Watch feeds it. The phone's microphone feeds it locally through Apple's own environmental sound analysis framework — without ever touching a network.
+
+We didn't need to build a listening pipeline. We needed to build on top of the one Apple had already built and privacy-vetted.
+
+The insight reframed the whole product: **we're not a microphone app. We're a HealthKit interpreter.** The data collection problem was solved. Our job was to make the data legible, personalized, and actionable — without ever touching it ourselves.
+
+Gemini came in here. Not for listening — for narrating. We'd take the on-device HealthKit noise exposure data, pass a structured summary (not audio) to Gemini, and get back a human-readable weekly insight: "You've had three high-exposure events this week. Based on your pattern, Tuesday evenings look like your consistent risk window."
+
+## The decision — and the alternatives we didn't pick
+
+<OptionTable rows={[
+  {
+    name: "Server-side audio processing",
+    summary: "Stream mic audio to backend, run ML inference, return personalized alerts in real time.",
+    verdict: "dropped"
+  },
+  {
+    name: "On-device ML only",
+    summary: "Use Core ML to classify exposure risk locally. Accurate but rigid — no personalization, no natural language output.",
+    verdict: "considered"
+  },
+  {
+    name: "HealthKit + Gemini narration",
+    summary: "Read Apple's existing noise exposure data from HealthKit (never our server), pass structured summaries to Gemini for natural language insights. No audio ever transmitted.",
+    verdict: "picked"
+  },
+  {
+    name: "Pure alert app",
+    summary: "Simple threshold alerts only. No AI, no history. Fast to build, solved nothing that existing apps don't already do.",
+    verdict: "dropped"
+  }
+]} />
+
+The picked architecture had one trade-off: Gemini requires a network call. But there's a meaningful difference between "I called an AI with a JSON summary of my week" and "I let an app stream 6 hours of ambient audio to a server." The first is a query. The second is surveillance. Users understand this distinction instinctively even when they can't explain it.
+
+## Execution
+
+**Swift + HealthKit** for data access: we used `HKQuantityType.quantityType(forIdentifier: .environmentalAudioExposure)` to pull hourly and daily noise exposure samples. HealthKit handles all device permissions, audit logging, and data residency. We got 90 days of exposure history on first launch for any user who'd had their iPhone out in noisy environments.
+
+**Core Audio / AVAudioSession** for live monitoring: when the app is foregrounded, we run a real-time meter against the mic — but only to display the current dB reading on screen, never to record or transmit. The meter stops the moment the app backgrounds.
+
+**Gemini API** for insight generation: we serialize exposure history into a structured prompt — peak exposure events, cumulative weekly dose, time-of-day patterns — and ask Gemini to narrate the pattern in plain English. The prompt explicitly instructs it to frame insights around safe listening behavior, not anxiety. "Here's what your week looked like. Here's your one action."
+
+**SwiftUI** for the interface: the main screen is a single pulsing circle that turns from green to amber to red based on current exposure. No dashboards, no charts, no settings maze. One number, one color, one action. Hackathon constraint drove this to the right answer.
+
+## Outcome
+
+<Metric value="3rd" label="Overall placement at HoyaHacks 2026" />
+
+<Metric value="Best .Tech" label="Domain award — bloop.tech" />
+
+<Metric value="72 hrs" label="From kickoff to working demo" />
+
+We demoed to judges on Sunday morning. The demo that landed wasn't the Gemini narration or the HealthKit depth — it was the moment a judge held the phone up to the event speaker, watched the circle go red, and said "okay, I actually want this." The privacy architecture mattered to *building* the thing correctly. The circle turning red mattered to whether anyone would care.
+
+## Reflection
+
+The pivot at 11pm was the right call but it cost us a working MVP at 3am. We spent four hours building audio streaming infrastructure we then threw away. In a hackathon, sunk-cost paralysis is more dangerous than the clock — the whiteboard reset saved the project even though it felt like it was killing it.
+
+The deeper thing I took from bloop: **privacy as a feature is undersold because it's hard to demo.** "Your audio never leaves your device" doesn't light up a crowd. A red circle does. In the final presentation, we barely mentioned the privacy architecture — we showed the circle. The judges who cared about privacy figured it out from the architecture slide. The judges who didn't care about privacy liked the circle anyway. The product worked on both levels.
+
+If I built bloop. outside of a hackathon, the next move would be background monitoring with proper push notification entitlements, Apple Watch complication for at-a-glance exposure, and a weekly report card that arrives Monday morning summarizing the prior week's listening environment. The Gemini integration is already structured for this — the API call is cheap, the data is already in HealthKit, the only thing missing is the shipping timeline.

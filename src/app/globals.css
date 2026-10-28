@@ -1,0 +1,481 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* Background — true black for space */
+  --color-void: #000000;
+  --color-void-elevated: #080808;
+  --color-void-surface: #111111;
+
+  /* Text — pure black & white.
+     The ramp deliberately STOPS at secondary. There used to be two more rungs,
+     --color-text-tertiary (white at 45%) and --color-text-muted (white at 25%),
+     and against this stylesheet's #000000 they measure 4.41:1 and 2.02:1 — both
+     under the 4.5:1 WCAG AA floor for body text. Neither was referenced by a
+     single rule or component, so they were pure liability: `@theme inline`
+     mints a Tailwind utility for every token it sees, which meant
+     `text-text-tertiary` and `text-text-muted` were sitting there autocompleting
+     for the next person, contrast failure included. Removed rather than nudged
+     up to a passing alpha, because raising them would have invented a ramp the
+     design does not actually use — components that want a dimmer grey reach for
+     a `text-white/NN` utility directly. (This line used to name `text-white/45`
+     as that utility. It no longer exists anywhere in src/: the same audit that
+     deleted these tokens raised every live /45 to /50, since 4.41:1 fails AA on
+     real text just as surely as it did on a token.)
+     If a third rung is ever genuinely needed: white at 0.456 alpha is the exact
+     AA boundary on #000000, so 0.50 is the first round number with headroom. */
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: rgba(255, 255, 255, 0.70);
+
+  /* Planet accent colors — boosted saturation */
+  --color-planet-sun: #D0D0D8;
+  --color-planet-mercury: #8C8C8C;
+  --color-planet-venus: #F0D080;
+  --color-planet-earth: #5A8FB5;
+  --color-planet-mars: #E04A10;
+  --color-planet-jupiter: #E09030;
+  --color-planet-saturn: #F0B820;
+  --color-planet-uranus: #60E8F8;
+  --color-planet-neptune: #3060F0;
+
+  /* Card system — neutral, no purple tint */
+  --color-card-bg: rgba(255, 255, 255, 0.04);
+  --color-card-bg-hover: rgba(255, 255, 255, 0.07);
+  --color-card-border: rgba(255, 255, 255, 0.10);
+  --color-card-border-hover: rgba(255, 255, 255, 0.20);
+
+  /* Fonts — the actual families are injected by next/font in layout.tsx:
+     --font-sans = Plus Jakarta Sans, --font-mono = DM Mono, --font-serif = Nunito.
+     --font-display is aliased to sans so Plus Jakarta Sans serves both display
+     and body; hierarchy comes from weight rather than a second family.
+     NOTE: --font-serif is a legacy slot name — it holds Nunito, a rounded
+     geometric SANS used as the display face. It is not a serif. The name is
+     kept because 6 component call sites use the `.font-serif` utility. */
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-display: var(--font-sans);
+  --font-serif: var(--font-serif);
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #000000;
+  color: #FFFFFF;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+/* ── Full-page grain overlay ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 128px 128px;
+}
+
+.font-display {
+  font-family: var(--font-display), system-ui, sans-serif;
+}
+
+.font-mono {
+  font-family: var(--font-mono), ui-monospace, monospace;
+}
+
+/* Misleading name, deliberate: this slot holds Nunito — a rounded geometric
+   SANS — not a serif. The fallback chain therefore degrades to rounded sans
+   faces (never Georgia), so a font-load failure keeps the soft display voice
+   instead of flipping headlines to a bookish serif. */
+.font-serif {
+  font-family: var(--font-serif), ui-rounded, 'Segoe UI Rounded',
+    'Helvetica Neue', system-ui, sans-serif;
+}
+
+/* ── Gradient text — planet-derived ── */
+.text-gradient-sun {
+  background: linear-gradient(135deg, #E0E0E8 0%, #A0A0B0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-earth {
+  background: linear-gradient(135deg, #5A8FB5 0%, #7BBCD4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-mars {
+  background: linear-gradient(135deg, #E04A10 0%, #E09030 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-venus {
+  background: linear-gradient(135deg, #F0D080 0%, #F0B820 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-saturn {
+  background: linear-gradient(135deg, #F0B820 0%, #FDB813 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-uranus {
+  background: linear-gradient(135deg, #60E8F8 0%, #3B9FE0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-neptune {
+  background: linear-gradient(135deg, #3060F0 0%, #5080F0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Editorial Panel System ── */
+/* Soft glassmorphism. Edge is created by a 0.5-spread box-shadow ring rather
+   than a solid 1px border — no hard line, just a fade. Big radius and a wide
+   ambient drop-shadow let the card silhouette dissolve into the cosmic bg. */
+.panel {
+  position: relative;
+  background: linear-gradient(
+    180deg,
+    rgba(14, 14, 18, 0.72) 0%,
+    rgba(8, 8, 11, 0.62) 100%
+  );
+  backdrop-filter: blur(12px) saturate(115%);
+  -webkit-backdrop-filter: blur(12px) saturate(115%);
+  border: 0;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow:
+    /* hairline ring, soft (no hard edge — uses 0.5px spread) */
+    0 0 0 0.5px var(--panel-accent-border, rgba(255, 255, 255, 0.05)),
+    /* faint top sheen */
+    0 1px 0 rgba(255, 255, 255, 0.03) inset,
+    /* wide ambient — fades the card edge into space */
+    0 32px 80px -28px rgba(0, 0, 0, 0.65);
+  transition: box-shadow 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.panel-accent-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 36px;
+  height: 2px;
+  background: var(--panel-accent-solid, rgba(255, 255, 255, 0.3));
+  opacity: 0.6;
+  /* Slower bar animation — no longer races ahead of the border fade */
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+  border-radius: 0 0 2px 0;
+}
+
+.panel:hover .panel-accent-bar {
+  /* More restrained expansion — grows ~2.3x rather than sweeping full width,
+     and fades to full opacity instead of slamming into view. */
+  width: 84px;
+  opacity: 1;
+}
+
+/* ── Planet Decorations ── */
+@keyframes planet-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+.planet-decoration {
+  animation: planet-float 20s ease-in-out infinite;
+  transform: translateZ(0);
+}
+
+/* ── Scrollbar ── */
+/* Painted away, not disabled, and ONLY on the document scroller. The page
+   already carries two progress affordances — the ScrollProgress bar across the
+   top and the PlanetProgress dot rail on the right — so a third indicator
+   sitting between them read as clutter against the starfield. Scrolling, wheel,
+   keyboard and Lenis are all untouched; only the track and thumb stop being
+   drawn.
+
+   ── Why the selector is scoped, and why that matters more than it looks ──
+   This used to be a bare `::-webkit-scrollbar`, which is not "the page's
+   scrollbar": it matches the scrollbar of EVERY element in the document. Any
+   inner `overflow-y-auto` / `overflow-x-auto` box therefore lost the one piece
+   of UI that says "there is more below" — turning every nested scroller into a
+   silent content-eater. It cost us a real bug: Footprints' right column was
+   locked to a 300px box around 454px of content, so all five city chips sat
+   below the fold with nothing on screen to hint at it, under copy reading
+   "5 places … open one". Two other inner scrollers were in the same state:
+   CityPanel's photo roll (up to 17 photos in a `flex-1 overflow-y-auto`) and
+   the portfolio's `pre` code blocks (`overflow-x: auto`, portfolio.css). Both
+   get a usable scrollbar back with this scoping.
+
+   So: hide it on the document scroller and nowhere else. A container that
+   genuinely wants no scrollbar opts in explicitly with `.scrollbar-none`
+   below — one grep away, instead of inherited silently by everything.
+
+   Both `html` and `body` are named because WebKit resolves the VIEWPORT
+   scrollbar's style from the root element, falling back to <body> the same way
+   background propagation does; naming both keeps the page scrollbar hidden
+   without the rule leaking to any other element. Neither is a scroll container
+   in its own right here (html's overflow propagates to the viewport, and
+   body's height is its content), so there is no second scrollbar to lose. */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+html {
+  scrollbar-width: none;      /* Firefox */
+  -ms-overflow-style: none;   /* legacy Edge */
+}
+
+/* Explicit opt-in for an inner scroller that really should carry no scrollbar.
+   Used by the Navbar's section row, which scrolls sideways inside a 36px-tall
+   pill where a horizontal scrollbar would be taller than the content it sits
+   under. Everything else keeps its scrollbar — see the note above. */
+.scrollbar-none {
+  scrollbar-width: none;      /* Firefox */
+  -ms-overflow-style: none;   /* legacy Edge */
+}
+.scrollbar-none::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* ── Asteroid Belt ── */
+
+@keyframes asteroid-drift {
+  0% { transform: translateX(-20px); opacity: 0; }
+  10% { opacity: 0.4; }
+  90% { opacity: 0.4; }
+  100% { transform: translateX(calc(100vw + 20px)); opacity: 0; }
+}
+
+.asteroid-belt-container {
+  position: relative;
+  width: 100%;
+  height: 60px;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+.asteroid-belt-band {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 100% 30px at 50% 50%, rgba(140,120,100,0.04) 0%, transparent 70%);
+}
+
+.asteroid-particle {
+  position: absolute;
+  border-radius: 40%;
+  background: rgba(160,150,140,0.5);
+}
+
+.asteroid-p1 {
+  width: 3px; height: 2px; top: 20px;
+  animation: asteroid-drift 18s linear infinite;
+  animation-delay: 0s;
+}
+.asteroid-p2 {
+  width: 2px; height: 2px; top: 30px;
+  animation: asteroid-drift 22s linear infinite;
+  animation-delay: -4s;
+}
+.asteroid-p3 {
+  width: 4px; height: 3px; top: 25px;
+  animation: asteroid-drift 15s linear infinite;
+  animation-delay: -8s;
+}
+.asteroid-p4 {
+  width: 2px; height: 1px; top: 35px;
+  animation: asteroid-drift 25s linear infinite;
+  animation-delay: -2s;
+}
+.asteroid-p5 {
+  width: 3px; height: 2px; top: 28px;
+  animation: asteroid-drift 20s linear infinite;
+  animation-delay: -12s;
+}
+.asteroid-p6 {
+  width: 2px; height: 2px; top: 22px;
+  animation: asteroid-drift 24s linear infinite;
+  animation-delay: -6s;
+}
+.asteroid-p7 {
+  width: 3px; height: 3px; top: 33px;
+  animation: asteroid-drift 17s linear infinite;
+  animation-delay: -10s;
+}
+.asteroid-p8 {
+  width: 2px; height: 1px; top: 26px;
+  animation: asteroid-drift 21s linear infinite;
+  animation-delay: -14s;
+}
+
+/* ── Selection color ── */
+::selection {
+  background: rgba(208, 208, 216, 0.3);
+  color: #FFFFFF;
+}
+
+/* ── Skip link ──
+   Rendered by components/providers/SkipLink.tsx as the first child of <body>,
+   so it is the first thing Tab reaches on every route. Without it a keyboard
+   visitor on the homepage walks the two TabBar links and then all ten Navbar
+   controls before the first line of content.
+
+   Hidden by TRANSFORM, not by `display: none` / `visibility: hidden` /
+   `width: 0`: all three remove an element from the tab order, which would make
+   an unreachable skip link — the classic way this control ships broken. It is
+   laid out and focusable at all times, just parked above the viewport.
+
+   White on black, not the site's usual translucent glass, because it has to be
+   legible the instant it appears over whatever is behind it — including
+   LoadingScreen's opaque black overlay, which is why the z-index clears that
+   overlay's z-[100] rather than the z-[60] TabBar. */
+.skip-link {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -150%);
+  z-index: 200;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0 0 0.5rem 0.5rem;
+  background: #FFFFFF;
+  color: #000000;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Both, not just :focus-visible. A skip link is only ever reached by keyboard,
+   so the two coincide in practice — but :focus is the guarantee that it shows
+   for any AT that moves focus programmatically without setting the
+   focus-visible heuristic. */
+.skip-link:focus,
+.skip-link:focus-visible {
+  transform: translate(-50%, 0);
+  /* Its own inset ring: the global white focus ring below would be invisible
+     against the link's own white background. */
+  outline: 2px solid #000000;
+  outline-offset: -5px;
+}
+
+/* ── Keyboard focus ring ──
+   The page is pure black with low-contrast glass panels, where the browser's
+   default focus outline is close to invisible. A bright hairline ring plus an
+   offset gap reads clearly against both the void background and the panels.
+   :focus-visible (not :focus) so the ring only appears for keyboard/AT
+   navigation and never flashes on mouse or touch press. Outline is used
+   rather than box-shadow so it cannot collide with the layered shadows that
+   build the .panel edge, and it follows border-radius automatically. */
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 3px;
+}
+
+/* The one exception. SkipLink.tsx stamps this attribute on whatever it hands
+   focus to — a zero-height landing div on the homepage, the page's <main> on
+   the portfolio routes. Neither is a control, and the rule above would draw a
+   full-width hairline across the top of the page or a box around the entire
+   article. The visible outcome of a skip is that the next Tab lands in content,
+   not a ring around a container. */
+[data-skip-target]:focus,
+[data-skip-target]:focus-visible {
+  outline: none;
+}
+
+/* ── Reduced motion ──
+   Homepage is the heaviest motion surface in the product: drifting asteroids,
+   floating planets, and a continuously rendering 3D canvas. Honour the OS
+   setting for everything this stylesheet owns.
+   SCOPE: this block reaches CSS animation and CSS transitions, and nothing
+   else. Framer Motion writes inline styles frame by frame and runs no CSS
+   transition at all, so `transition-duration` below could never touch it; the
+   r3f scene is WebGL and has no CSS surface whatsoever. Those two are handled
+   in JS, and each has exactly one owner:
+     • framer-motion  → <MotionConfig reducedMotion="user"> in
+                        components/providers/MotionPreferences.tsx, mounted in
+                        app/layout.tsx so it covers every route.
+     • the r3f scene  → CosmicScene.tsx pins its calm-on-read damper
+                        (motionRef) at 0, which zeroes the per-frame advance of
+                        every ambient loop in the canvas.
+     • Lenis          → SmoothScroll.tsx returns before constructing it.
+     • in-page jumps  → jumpScrollBehavior() in providers/reducedMotion.ts;
+                        see the caveat on scroll-behavior below.
+   (See the note in CosmicCanvas.tsx on why the quality tier is not a
+   substitute for any of this.)
+   The universal rule collapses durations rather than deleting animations, so
+   any decorative keyframe added later is defused by default while state
+   changes still land on their end values instead of never firing. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    /* Defensive: nothing currently sets scroll-behavior: smooth, but any
+       future `scroll-smooth` utility would otherwise slip past this block.
+       It does NOT cover a scrollIntoView({behavior:'smooth'}) call — CSSOM-View
+       gives an author-supplied behavior option precedence over this property,
+       !important included. Those call sites have to opt in themselves, via
+       jumpScrollBehavior() in components/providers/reducedMotion.ts. */
+    scroll-behavior: auto !important;
+  }
+
+  /* Planet float is a pure ±12px bob — killing the animation leaves the
+     planet exactly where the static layout puts it. */
+  .planet-decoration {
+    animation: none !important;
+  }
+
+  /* Asteroids only exist as motion: their keyframes supply both the X travel
+     and the fade-in, so a stopped particle would pile up unstyled at the
+     container's left edge. Hide the particles and keep the belt's 60px box
+     and background band so nothing below it shifts. */
+  .asteroid-particle {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+}
+
+/* ── No-JS fallback ──
+   LoadingScreen ships inside the SSR'd HTML as a `fixed inset-0 z-[100] bg-black`
+   overlay, and the only thing that ever removes it is React state. With scripting
+   off that state never changes, so the visitor gets a permanent black screen even
+   though every section's real copy is prerendered underneath it. `scripting: none`
+   matches exactly that case and nothing else — it is false for `initial-only`, so
+   the overlay still plays normally while hydration is pending.
+   Selector mirrors LoadingScreen.tsx's root element (role="status" +
+   aria-label="Loading"); if those attributes move, this rule silently stops
+   working, so keep the two in sync. */
+@media (scripting: none) {
+  [role="status"][aria-label="Loading"] {
+    display: none;
+  }
+}

@@ -1,0 +1,308 @@
+/* ──────────────────────────────────────────────────────────────────────
+   Portfolio tab — editorial design tokens
+
+   Scoped to `.portfolio-root` so the cosmic home stays untouched. Tokens
+   are named `--portfolio-*` (not `--pt-*`) so it's obvious which route
+   they belong to if they ever collide in devtools.
+
+   Palette: "Bloomberg Terminal at Midnight" — warm near-black, warm
+   off-white (never pure #fff), a three-tier readable text hierarchy
+   (primary / secondary / tertiary) plus a decorative-only quaternary,
+   champagne accent used only on links and a single ornament per article.
+   ────────────────────────────────────────────────────────────────────── */
+
+.portfolio-root {
+  --portfolio-bg: #131110;
+  --portfolio-surface: #15110d;
+  --portfolio-hairline: #2a2621;
+
+  --portfolio-text-primary: #e8e3da;
+  --portfolio-text-secondary: #b8b0a4;
+  --portfolio-text-tertiary: #8a8175;
+  /* DECORATIVE ONLY — 2.45:1 on --portfolio-bg, so it fails WCAG AA (1.4.3)
+     for any text a sighted reader is meant to read. Its one live use is
+     `.card-ordinal`, which is aria-hidden and carries no information. There is
+     no AA-passing colour meaningfully dimmer than tertiary against this
+     background (tertiary is already only 4.91:1), so a fourth *readable* tier
+     does not exist here: reach for --portfolio-text-tertiary instead. */
+  --portfolio-text-quaternary: #5a5248;
+
+  --portfolio-accent: #c8a97e;
+  --portfolio-accent-muted: rgba(200, 169, 126, 0.6);
+
+  font-feature-settings: "ss01", "kern";
+  letter-spacing: -0.005em;
+}
+
+/* ── Reading column — 680px measure is the single highest-leverage
+   comfort decision for editorial prose. Break-out widths (figures,
+   pull quotes) exceed this column deliberately. ── */
+
+.portfolio-root .prose-editorial {
+  max-width: 680px;
+  margin-inline: auto;
+  line-height: 1.7;
+  font-size: 1.125rem; /* 18px */
+  color: var(--portfolio-text-primary);
+}
+
+.portfolio-root .prose-editorial > :first-child {
+  margin-top: 0;
+}
+
+.portfolio-root .prose-editorial p {
+  margin-bottom: 1.25rem;
+}
+
+/* The pull quote's body is a <div> wrapping the <p> remark already produced
+   (see PullQuote in MDXComponents.tsx — nesting <p> in <p> is invalid and
+   broke hydration). That inner paragraph would otherwise inherit the rule
+   above and push the closing hairline down by 1.25rem, making a box whose
+   padding is deliberately symmetric look bottom-heavy. */
+.portfolio-root .prose-editorial .pull-quote-body p {
+  margin-bottom: 0;
+}
+
+/* ── Heading hierarchy — Nunito for H1/H2 display (round geometric),
+   Jakarta uppercase for H3 subsections. ── */
+
+.portfolio-root .prose-editorial h1 {
+  font-family: var(--font-serif), system-ui, sans-serif;
+  font-weight: 300;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  line-height: 1.05;
+  letter-spacing: 0em;          /* was -0.02em — Nunito looks cramped at negative */
+  color: var(--portfolio-text-primary);
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.portfolio-root .prose-editorial h2 {
+  font-family: var(--font-serif), system-ui, sans-serif;
+  font-weight: 300;             /* was 400 — Nunito 300 is more editorial */
+  font-size: 2rem;
+  line-height: 1.2;
+  letter-spacing: 0em;          /* was -0.015em */
+  color: var(--portfolio-text-primary);
+  margin-top: 4.5rem;
+  margin-bottom: 1rem;
+}
+
+.portfolio-root .prose-editorial h3 {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 1.125rem;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--portfolio-text-secondary);
+  margin-top: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+/* ── Links — champagne accent, two-state underline. Rest: offset 4px.
+   Hover: offset collapses to 2px, color brightens. ── */
+
+.portfolio-root .prose-editorial a {
+  color: var(--portfolio-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--portfolio-accent-muted);
+  transition: text-underline-offset 120ms ease, text-decoration-color 120ms ease;
+}
+
+.portfolio-root .prose-editorial a:hover {
+  text-underline-offset: 2px;
+  text-decoration-color: var(--portfolio-accent);
+}
+
+/* ── Heading anchors ──
+   rehype-autolink-headings runs with behavior: "append" (see next.config.ts),
+   so each heading ships as its own plain text followed by
+   <a href="#its-own-id" aria-hidden="true" tabindex="-1">#</a>.
+
+   It used to run with "wrap", which put the heading text itself inside the
+   anchor. The prose link rule above then painted all seven H2s of a case study
+   champagne-and-underlined, as though each linked somewhere else; killing the
+   colour and the underline fixed the look but left seven tab stops per page
+   that looked exactly like headings and read as links to a screen reader.
+   Appending a glyph instead is what actually removes them — the plugin's
+   append default is aria-hidden + tabindex="-1", so the anchor leaves both the
+   tab order and the accessibility tree, and the heading goes back to being a
+   heading.
+
+   The glyph is invisible until the heading is hovered, which is the
+   GitHub/MDN idiom and needs no explaining. `opacity`, not `display`, so it
+   holds its space and revealing it shifts nothing. The :focus-visible arm is
+   for programmatic focus only (tabindex="-1" means Tab never lands here) and
+   costs one selector to keep honest. On touch, where there is no hover, it
+   simply stays hidden — the heading IDs are still addressable by URL, which is
+   what the anchor is a shortcut *to*. ── */
+
+.portfolio-root .prose-editorial :is(h1, h2, h3, h4, h5, h6) > a[href^="#"] {
+  margin-left: 0.4em;
+  color: var(--portfolio-accent);
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.portfolio-root .prose-editorial :is(h1, h2, h3, h4, h5, h6):hover > a[href^="#"],
+.portfolio-root .prose-editorial :is(h1, h2, h3, h4, h5, h6) > a[href^="#"]:focus-visible {
+  opacity: 1;
+}
+
+/* ── Pull quote — Nunito italic, breaks out of reading column to
+   800px, hairline rules above and below, no quotation marks. ── */
+
+.portfolio-root .prose-editorial blockquote {
+  max-width: 800px;
+  margin: 4.5rem auto;
+  padding: 2rem 0;
+  border-top: 1px solid var(--portfolio-hairline);
+  border-bottom: 1px solid var(--portfolio-hairline);
+  font-family: var(--font-serif), system-ui, sans-serif;
+  font-style: italic;
+  font-weight: 300;             /* was 400 */
+  font-size: 1.75rem;
+  line-height: 1.35;            /* was 1.3 — Nunito needs slightly more leading */
+  color: var(--portfolio-text-primary);
+  text-align: center;
+}
+
+/* ── Section break — centered asterism replaces <hr>. Do not style hr
+   with ornamental glyphs; use <hr /> in MDX for a quiet break, leave
+   the asterism for a deliberate scene change. ── */
+
+.portfolio-root .prose-editorial hr {
+  border: none;
+  border-top: 1px solid var(--portfolio-hairline);
+  max-width: 120px;
+  margin: 3rem auto;
+}
+
+.portfolio-root .prose-editorial ul,
+.portfolio-root .prose-editorial ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.portfolio-root .prose-editorial li {
+  margin-bottom: 0.5rem;
+}
+
+.portfolio-root .prose-editorial code {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.9em;
+  background: var(--portfolio-surface);
+  border: 1px solid var(--portfolio-hairline);
+  padding: 0.1em 0.4em;
+  border-radius: 3px;
+  color: var(--portfolio-text-primary);
+}
+
+.portfolio-root .prose-editorial pre {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  background: var(--portfolio-surface);
+  border: 1px solid var(--portfolio-hairline);
+  border-radius: 4px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  overflow-x: auto;
+}
+
+.portfolio-root .prose-editorial pre code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+.portfolio-root .prose-editorial strong {
+  color: var(--portfolio-text-primary);
+  font-weight: 600;
+}
+
+.portfolio-root .prose-editorial em {
+  font-style: italic;
+  color: var(--portfolio-text-primary);
+}
+
+/* ── Figure captions — DM Mono italic, tertiary text. ── */
+
+.portfolio-root .prose-editorial figcaption {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
+  font-style: italic;
+  color: var(--portfolio-text-tertiary);
+  margin-top: 0.75rem;
+  letter-spacing: 0.02em;
+}
+
+/* ── Tag labels — inline dots, no border chrome.
+   Replaces bordered pill boxes for a cleaner editorial look. ── */
+.portfolio-root .tag-inline {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;          /* 11px */
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--portfolio-text-tertiary);
+}
+
+.portfolio-root .tag-inline + .tag-inline::before {
+  content: '·';
+  margin: 0 0.4em;
+  opacity: 0.5;
+}
+
+/* ── Ordinal counter — e.g. "01", "02". Visual anchor on index page. ── */
+.portfolio-root .card-ordinal {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.15em;
+  color: var(--portfolio-text-quaternary);
+  user-select: none;
+  transition: color 150ms ease;
+  flex-shrink: 0;
+  width: 2rem;
+}
+
+.portfolio-root .group:hover .card-ordinal {
+  color: var(--portfolio-accent);
+}
+
+/* ── Mobile tightening — full-size type at 18px is too hot on 375px. ── */
+
+@media (max-width: 640px) {
+  .portfolio-root .prose-editorial {
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+
+  .portfolio-root .prose-editorial h2 {
+    font-size: 1.5rem;
+    margin-top: 2.75rem;
+  }
+
+  .portfolio-root .prose-editorial h3 {
+    font-size: 1rem;
+    margin-top: 2rem;
+  }
+
+  .portfolio-root .prose-editorial blockquote {
+    font-size: 1.25rem;
+    padding: 1.5rem 0;
+    margin: 3rem auto;
+  }
+}
+
+/* ── Respect prefers-reduced-motion — editorial pages are already still,
+   but when it's on, strip the underline offset transition too. ── */
+
+@media (prefers-reduced-motion: reduce) {
+  .portfolio-root .prose-editorial a {
+    transition: none;
+  }
+}

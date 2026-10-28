@@ -1,0 +1,98 @@
+There's a moment everyone knows: you meet someone interesting, you have a good conversation, and then you have no idea what to do with them. LinkedIn feels corporate. Following them on Instagram feels parasocial. Trading contact info feels presumptuous. So you say "let's stay in touch" and you both know you won't. The interaction had real potential and the tools conspired to waste it.
+
+The specific version of this problem I kept running into was at Georgetown: you'd meet someone at an event, figure out you were both in CS and interested in finance, and then have no clean way to show them your world and see theirs. Not your resume. Not your feed. Your actual world — what you were building, what you were thinking about, what you wanted to be around. Mapperlap started as a solution to that specific friction.
+
+## Context
+
+<Callout label="At a glance">
+  Mapperlap is a web app that lets two people compare their worlds — interests,
+  projects, skills, goals — and instantly see where they overlap. Built and
+  launched as a solo project. Designed for the connection moment: not a
+  professional network, not social media, a shared map of what you have in
+  common.
+</Callout>
+
+The product question was deceptively simple: **what's the minimal surface for two people to discover they belong in each other's orbit?** Not their full profile. Not a feed. Just: here's my world, here's yours, here's where they intersect. The name is the product — mapper + overlap, collapsed.
+
+## The problem, framed
+
+Every existing tool for human connection is optimized for a different thing than connection:
+
+**LinkedIn** is optimized for credentials. Two people compare job titles and alma maters. The actual texture of how they think, what they care about, what they're building — invisible.
+
+**Twitter/X** is optimized for broadcasting. You can see what someone thinks about at scale, but the signal-to-noise ratio means you're mostly seeing their hottest takes, not their full range.
+
+**Instagram** is optimized for aesthetics. You see what someone wants to look like they're doing, not what they're actually doing.
+
+**Notion/portfolio pages** are close — they show real work — but they're monologues. There's no interactive layer. You can't hold your world up against someone else's and see what matches.
+
+The gap: a **two-sided discovery experience** optimized for the specific moment of early connection, where both parties want to know quickly if there's genuine overlap worth investing in.
+
+<PullQuote>
+The problem isn't finding people. The problem is knowing, fast, whether you've found the right people.
+</PullQuote>
+
+## The insight
+
+The reason existing tools fail the discovery moment isn't technical — it's **framing**. Every network asks you to represent yourself *for* an audience. You're performing, not exploring. The anxiety of profile-building (what do I include? how do I sound?) kills the honesty that makes early connections actually work.
+
+The insight: **what if both people built their map at the same time, for each other specifically?** Not a public profile. A private session. Two people, one shared canvas, seeing where their worlds collide. The overlap becomes the conversation starter, not the icebreaker question.
+
+This reframed the product from "build a good profile" to "play a game together." The session model meant nobody was performing for an unseen audience — you were only showing your map to one person, right now. That dropped the anxiety and raised the honesty.
+
+## The decision — and the alternatives I didn't pick
+
+<OptionTable rows={[
+  {
+    name: "Static profile comparison",
+    summary: "Each user builds a permanent profile, share a link, system computes overlap. Fast to build, but inherits the 'performing for an audience' problem of every existing network.",
+    verdict: "dropped"
+  },
+  {
+    name: "Real-time collaborative canvas",
+    summary: "Both users in a live session simultaneously placing their interests on a shared canvas. Highest honesty, highest engagement — but complex to build and requires synchronous availability.",
+    verdict: "picked"
+  },
+  {
+    name: "Async session",
+    summary: "User A fills out their map, sends link, User B fills theirs, both see overlap revealed at the end. Lower tech complexity, preserves the reveal mechanic.",
+    verdict: "considered"
+  },
+  {
+    name: "Interest quiz + matching",
+    summary: "Structured questionnaire, algorithmic matching score. Scalable but loses the open-ended discovery that makes connections feel real rather than computed.",
+    verdict: "dropped"
+  }
+]} />
+
+The real-time session was the right call because **the moment of simultaneous discovery is the product.** Watching someone place "ceramics" on their canvas the same moment you're placing "ceramics" on yours is a different experience than seeing a match percentage. It's specific, it's surprising, it's human. The synchronous constraint was a feature.
+
+## Execution
+
+**Session architecture:** Each Mapperlap session is a unique URL — no accounts required to start. When two people join the same session link, a shared state layer opens between them. Each user sees their own canvas on the left, the other person's side on the right with its contents hidden, and a shared overlap zone in the center that populates in real time as they add items.
+
+**The canvas model:** Users place nodes on their canvas — free-form text, in categories they define. The categories aren't fixed (interests, projects, skills, books, places) — they're whatever the user wants to call them. This was a deliberate anti-pattern against structured profiles. Structure imposes what "a person" should contain. The open canvas lets both users define what their world consists of.
+
+**Overlap detection:** When User A places "machine learning" and User B places "ML" or "machine learning" in compatible categories, the system surfaces the match in the shared center — not exact-string matching, but semantic similarity via embedding distance. Close enough means it lights up. The lighting-up is the moment.
+
+**The reveal mechanic:** Neither user sees the other's canvas in real time — only the overlap zone populates live. You can't see exactly what they're placing until you match. This was the key UX decision: it preserves the element of surprise and prevents anchoring (if you can see my canvas, you might start placing things that match mine rather than things that are true to you).
+
+**Tech stack:** Next.js frontend, WebSocket-based session sync, Supabase for session state persistence, OpenAI embeddings for semantic matching, Vercel for hosting.
+
+## Outcome
+
+<Metric value="mapperlap.co" label="Live on the web" />
+
+<Metric value="< 1 week" label="From concept to deployed product" />
+
+The fastest validation came from using it myself: I sent the link to someone I'd met once, we both filled out our canvases, and the overlap zone lit up on "building things," "trading," and "Georgetown" — things we'd only briefly touched on in conversation. We scheduled a call that turned into a collaboration. The product worked the first time I used it, which is usually a sign the problem was real.
+
+The harder test is retention — does someone use Mapperlap more than once? The session-based model means there's no persistent graph to return to, which is intentional (the alternative is another social network) but limits organic re-engagement. The next version would add opt-in persistence: save this session, build your map over time, share it when a new connection starts.
+
+## Reflection
+
+Mapperlap taught me that the hardest part of building social products isn't the tech — it's the **cold-start problem on the interaction level.** Even if two users both want to connect, the product has to make the first interaction feel low-stakes enough to be honest. The session model with no permanent profiles was the right answer to this. Zero portfolio anxiety. Zero follower count to protect. Just: here's my world, what's yours?
+
+The reveal mechanic (hiding each other's full canvas, only showing overlap) was the highest-leverage design decision I made on this project. It came from watching early testers anchor their inputs to what they assumed the other person would put. Remove the visibility, get honest inputs. The overlap that surfaces from honest inputs is more surprising and more valuable than anything you'd get from two people trying to match each other.
+
+If I built Mapperlap again with more time, the one thing I'd add earlier is a "save and share" layer for the overlap zone — a screenshot or permalink of "here's what we found we have in common." The overlap is the artifact worth keeping. Right now it lives only in the session. Making it portable would extend the product's reach: every good session becomes a shareable object.
